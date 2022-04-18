@@ -2,23 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine; 
 
-public static class Vector2Extension {
-    
-    public static Vector2 Rotate(Vector2 v, float degrees) {
-        float sin = Mathf.Sin(degrees * Mathf.Deg2Rad);
-        float cos = Mathf.Cos(degrees * Mathf.Deg2Rad);
-        
-        float tx = v.x;
-        float ty = v.y;
-        v.x = (cos * tx) - (sin * ty);
-        v.y = (sin * tx) + (cos * ty);
-        return v;
-    }
-}
-
 public class PlayerDrillBehaviour : MonoBehaviour
 {
-    // obsolete
+    // obsolete and not used at all, but kept just in case
     class Bezier
     {
         Vector2[] controlPoints;
@@ -194,20 +180,31 @@ public class PlayerDrillBehaviour : MonoBehaviour
 
         public CirclePath(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed)
         {
-            _startPos = startPos;
+            //startPos, startDir - starting position and direction of the path, endPos - final position of the path, relative to camera (final direction is always down)
+            _startPos = startPos; 
             _startDir = startDir;
             _startDir.Normalize();
             _endPos = endPos;
+            // all turns have the same radius
             _radius = radius;
+            // since tilemaps move up, path needs to accommodate for movement
             _Shift = new Vector2(0.0f, 0.0f);
+            // step for calculating derivative
             _h=0.001f;
+            // _Vdrill - maximum magnitude of speed along the path, _Vdesc - speed of descending (tilemaps moving up) is always constant
+            // _Vside - current speed of moving side ways, updated every frame
             _Vdrill = speed;
             _Vdesc  = descendSpeed;
             _Vside = sideSpeed;
+            // for drawing the path (debugging)
             _amountOfDots = 100;
+            // distance travelled along the path
             _currentDistance = 0;
+            // not used
             _timer = 0;
+            // for drawing the path
             dots  = new GameObject[_amountOfDots];
+            // was used for debugging
             _allegedTime = 0;
             _originalEndPos = _endPos;
         }
@@ -232,6 +229,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
         public float GetRadius() {
             return _radius;
         }
+        // update vertical component of endPos
         public void SetEndPos(float deltaY) {
             _endPos += new Vector2(0.0f, deltaY);
             DefineTurns();
@@ -240,78 +238,11 @@ public class PlayerDrillBehaviour : MonoBehaviour
             _Vside = sideSpeed;
         }
 
-        public Vector2 MoveAlong(Vector2 pos, float distance)
-        {
-            if (_clockDir != _leftwing)
-            {
-                if (distance <= (alpha1 - alpha2) * _radius)
-                {
-                    return _center1 + Rotate(_rad1, (_clockDir ? 1 : -1) * distance / _radius);
-                }
-                distance -= (alpha1 - alpha2) * _radius;
-                if (distance <= StraightAway().magnitude)
-                {
-                    return _center1 + Rotate(_rad1, (_clockDir ? 1 : -1) * (alpha1 - alpha2)) + _L * distance / _L.magnitude;
-                }
-                distance -= _L.magnitude;
-                if (distance <= alpha2 * _radius)
-                {
-                    return _center2 + Rotate(_rad2, (_leftwing ? 1 : -1) * (alpha2 - distance / _radius));
-                }
-                return _endPos;
-            }
-            else
-            {
-                //if (Mathf.Abs((pos - _center1).x) - Maths.Abs(Rotate(_rad1, (_clockDir ? 1 : -1) * (alpha1 + alpha2)).x) > 0)
-                float angleToRad1 = ( _clockDir ? 360 : 0) + ( _clockDir ? -1 : 1) * Quaternion.FromToRotation(pos - _center1, _rad1).eulerAngles.z;
-                float angleToRad2 = (!_leftwing ? 360 : 0) + (!_leftwing ? -1 : 1) * Quaternion.FromToRotation(pos - _center2, _rad2).eulerAngles.z;
-                if ((pos - _center1).magnitude <= _radius + 0.005)
-                {
-                    if(angleToRad1 * Mathf.Deg2Rad * _radius + distance <= (alpha1 + alpha2) * _radius)
-                    {
-                        return _center1 + Rotate(pos - _center1, (_clockDir ? 1 : -1) * distance / _radius);
-                    }
-                    distance -= (alpha1 + alpha2 - angleToRad1 * Mathf.Deg2Rad) * _radius;
-                    if(distance <= StraightAway().magnitude)
-                    {
-                        return _center1 + Rotate(_rad1, (_clockDir ? 1 : -1) * (alpha1 + alpha2)) + StraightAway() * distance / StraightAway().magnitude;
-                    }
-                    distance -= StraightAway().magnitude;
-                    if (distance <= alpha2 * _radius)
-                    {
-                        return _center2 + Rotate(_rad2, (_leftwing ? 1 : -1) * (alpha2 - distance / _radius));
-                    }
-                    return _endPos;
-                }
-                //distance -= (alpha1 + alpha2 - angleToRad1 * Mathf.Deg2Rad) * _radius;
-                if ((pos - _center1).magnitude > _radius + 0.005 & (pos - _center2).magnitude > _radius + 0.005)
-                {
-                    if(distance <= StraightAway().magnitude - (pos - _center1 - Rotate(_rad1, (_clockDir ? 1 : -1) * (alpha1 + alpha2))).magnitude)
-                    {
-                        return pos + StraightAway() * distance / StraightAway().magnitude;
-                    }
-                    distance -= StraightAway().magnitude - (pos - _center1 - Rotate(_rad1, (_clockDir ? 1 : -1) * (alpha1 + alpha2))).magnitude;
-                    if (distance <= alpha2 * _radius)
-                    {
-                        return _center2 + Rotate(_rad2, (_leftwing ? 1 : -1) * (alpha2 - distance / _radius));
-                    }
-                    return _endPos;
-                }
-                if ((pos - _center2).magnitude <= _radius + 0.005)
-                {
-                    return _center2 + Rotate(_rad2, (_leftwing ? 1 : -1) * (angleToRad2 * Mathf.Deg2Rad - distance / _radius));
-                }
-                return _endPos;
-            }
-        }
-
+        // changes currentDistance and returns new point according to currentDistance
         public Vector2 Move(float deltaTime)
         {
             _Shift += new Vector2(_Vside, _Vdesc) * deltaTime;
-            Vector2 r_dt = GetPoint(_currentDistance) - GetPoint(_currentDistance + _h); 
-            r_dt.Normalize();
-            // float r_dtV = Vector2.Dot(r_dt, velocity);
-            float l = _Vdrill;// + Mathf.Sqrt(r_dtV*r_dtV - velocity.magnitude * velocity.magnitude + _Vdrill*_Vdrill);
+            float l = _Vdrill;
             _timer += deltaTime;
             if (PathLength() <= 0.05) {
                 if(Mathf.Abs(_originalEndPos.y - _endPos.y) / _Vdesc > _timer) {
@@ -338,6 +269,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
         {
             return _hasArrived;
         }
+        // draw the path (debugging)
         public void Draw(GameObject circlePrefab)
         {
             for (int i = 0; i < _amountOfDots / 2; i++)
@@ -350,6 +282,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
                 dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
             } 
         }
+        // debugging
         public void DestroyDots()
         {
             for (int i = 0; i < _amountOfDots; i++)
@@ -361,10 +294,15 @@ public class PlayerDrillBehaviour : MonoBehaviour
             }
         }
 
+        // since tilemaps move up actual endPos (endPos in tilemap coordinates) must by way lower than endPos we first recieved (endPos in global coordinates)
+        // to calculate this endPos Newton's method is used
+        // Function calculates difference between time for drill to travel along path (with endPos moved down by deltaY) and time for tilemaps to move up by deltaY
+        // looking for such deltaY: Function(deltaY) == 0
         public float Function(float deltaY){
             CirclePath cPathPlusDeltaY = new CirclePath(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside);
             return (deltaY) / _Vdesc - cPathPlusDeltaY.PathLength() / _Vdrill;
         }
+        // Functioin 2,3,4 exist for debugging
         public float Function2(float deltaY){
             CirclePath cPathPlusDeltaY = new CirclePath(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside);
             cPathPlusDeltaY.DefineTurns();
@@ -415,15 +353,6 @@ public class PlayerDrillBehaviour : MonoBehaviour
             } 
         }
         public void DrawFunction4(GameObject circlePrefab) {
-            // for (int i = 0; i < _amountOfDots; i++){
-            //     float argument = -3 + (float)(i-3) / (_amountOfDots-4) * 6;
-            //     if     (Function(argument) > maxValue) {maxValue = Function(argument);}
-            //     else if(Function(argument) < minValue) {minValue = Function(argument);}
-            //     if (dots[i] != null)
-            //     {
-            //         Destroy(dots[i]);
-            //     }
-            // }
             dots[0] = Instantiate(circlePrefab, new Vector2(0.0f, 0.0f), Quaternion.identity);
             dots[0].GetComponent<SpriteRenderer>().sortingOrder = 5;
             dots[1] = Instantiate(circlePrefab, new Vector2(0.0f, 1.0f), Quaternion.identity);
@@ -442,31 +371,24 @@ public class PlayerDrillBehaviour : MonoBehaviour
                 dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
             } 
         }
+        // calculation
         public void CorrectEndPos(){
-            //Debug.Log("Correct End Pos: ");
-            //Debug.Log("before:" + _endPos.y.ToString());
             float deltaY = 10;
-            //Debug.Log("Y: " + _endPos.y);
             float diffStep = 0.0001f;
             float cPathL1, cPathL2;
             for (int i = 0; i < 4; i++) {
                 cPathL2 = Function4(deltaY-diffStep);
                 cPathL1 = Function4(deltaY);
                 deltaY += cPathL1 * diffStep / (cPathL2 - cPathL1);
-                // Debug.Log(deltaY + " ----- " + Function4(deltaY));
             }
-            // Debug.Log("DeltaY as a result: " + (deltaY));
             _endPos = new Vector2(_endPos.x, _endPos.y - deltaY);
             // Debug.Log("accuracy: " + Function4(deltaY));
-            // Debug.Log("ENDPOS_Y: " + _endPos.y);
             DefineTurns();
-            // Debug.Log("ENDPOS_Y: " + _endPos.y);
-            // Debug.Log("ENDPOS_Y: " + (PathLength() / _Vdrill * _Vdesc - Mathf.Abs(_originalEndPos.y - _endPos.y)));
             if (Mathf.Abs(PathLength() / _Vdrill * _Vdesc - Mathf.Abs(_originalEndPos.y - _endPos.y)) > 0.1) {
-                // Debug.Log("HEY");
                 _Vdrill = PathLength() * _Vdesc / Mathf.Abs(_originalEndPos.y - _endPos.y);
             }
         }
+        // another method, not used
         public void CorrectEndPos2(){
             //Debug.Log("before:"2 + _endPos.y.ToString());
             float deltaYleft  = -30.0f;
@@ -489,7 +411,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
             Debug.Log("accuracy: " + Function4(deltaYcentre));
             DefineTurns();
         }
-
+        // debugging, to solve step by step
         public void Iteration(){
             float deltaY = Mathf.Abs(_endPos.y);
             float diffStep = 0.001f;
@@ -500,7 +422,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
             _endPos.y -= Mathf.Abs(deltaY);
             DefineTurns();
         }
-
+        //debugging purposes
         public void SaveDataForTheory() {
             _allegedTime = Mathf.Abs(_originalEndPos.y - _endPos.y) / _Vdesc;
             _allegedTime2 = PathLength() / _Vdrill;
@@ -518,7 +440,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
                 Debug.Log(_center2 + _rad2);
             }
         }
-
+        // essential function, which returns point, corresponding to arbitrary distance
         public Vector2 GetPoint(float distance)
         {
             float OG = distance;
@@ -559,6 +481,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
                 return _endPos;
             }
         }
+
         public Quaternion GetCurrentRotation() {
             float distance = _currentDistance;
             if (_clockDir != _leftwing)
@@ -602,7 +525,7 @@ public class PlayerDrillBehaviour : MonoBehaviour
                 return Quaternion.FromToRotation(new Vector2(0, -1), new Vector2(0, -1));
             }
         }
-
+        // defines centers of circles and angles across these circles, the drill will move
         public void DefineTurns()
         {
             Vector2 radClock  = -_radius * Rotate(_startDir,  Mathf.PI / 2);
@@ -630,8 +553,6 @@ public class PlayerDrillBehaviour : MonoBehaviour
             {
                 _endPos = new Vector2(_endPos.x, centerCCBounds.y - 2 * _radius);
             }
-            // dots[0] = Instantiate(circlePrefab, _endPos, Quaternion.identity);
-            // dots[0].GetComponent<SpriteRenderer>().sortingOrder = 5;
 
             if (Mathf.Abs(center1CClock.x - _endPos.x) <= _radius & Mathf.Abs(center1Clock.x - _endPos.x) <= _radius)
             {
@@ -730,23 +651,21 @@ public class PlayerDrillBehaviour : MonoBehaviour
             dots[4].GetComponent<SpriteRenderer>().sortingOrder = 5;            
             dots[5] = Instantiate(circlePrefab, GetPoint(PathLength()/2), Quaternion.identity);
             dots[5].GetComponent<SpriteRenderer>().sortingOrder = 5;            
-            //Debug.Log(PathLength());
         }
 
         public float PathLength()
         {
             if (_clockDir != _leftwing)
             {
-                //Debug.Log(alpha1.ToString() + " " + _radius.ToString() + " " + _L.magnitude.ToString());
                 return alpha1 * _radius + _L.magnitude;
             }
             else
             {
-                //Debug.Log(alpha1.ToString() + " " + alpha2.ToString() + " " + _radius.ToString() + " " + _L.magnitude.ToString());
                 return Mathf.Abs(alpha1 * _radius + 2 * alpha2 * _radius) + 2 * Mathf.Sqrt(Mathf.Max(0, _L.magnitude * _L.magnitude / 4 - _radius * _radius));
             }
         }
         
+        // returns vector tangent (касательный) to both circles 
         Vector2 StraightAway()
         {
             if (_clockDir != _leftwing)
@@ -761,7 +680,6 @@ public class PlayerDrillBehaviour : MonoBehaviour
     }
 
     CirclePath cPath;
-    // public Texture2D dirtparts;
     Vector2 poi;
     Vector2 velocity;
     Vector2 direction;

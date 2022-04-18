@@ -6,7 +6,8 @@ using UnityEditor;
 
 public class TileMapBehaviour : MonoBehaviour
 {
-    class TilemapManager {
+    class TilemapManager 
+    {
         Tilemap mainTilemap;
         Tilemap  secTilemap;
         Transform[] tmapsPos;
@@ -32,7 +33,7 @@ public class TileMapBehaviour : MonoBehaviour
 
         int width, height;
         int threshold, numIter;
-        
+
         public TilemapManager(int threshold_, int numIter_, Vector3Int tmapSize, Tile dirt, Tile dirtBG, Tile rock, Tile rockBG, Tilemap prefab, SpriteMask maskfab, Grid parent) {
             width  = tmapSize.x;
             height = tmapSize.y;

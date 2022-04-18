@@ -29355,14 +29355,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2083727580}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e624223df8c9ad34b9ef6a60e1af080e, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a472421c71be524ebf573141834517c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  maxVel: 2
   dot: {fileID: 0}
   circlePrefab: {fileID: 203473700042371450, guid: 0225f999f9ae8684bb96186acdd286d4, type: 3}
   speed: 4
-  rotSpeed: 0
   tmapBehav: {fileID: 1520694917}
 --- !u!60 &2083727587
 PolygonCollider2D:

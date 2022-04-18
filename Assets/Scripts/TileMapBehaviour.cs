@@ -67,10 +67,13 @@ public class TileMapBehaviour : MonoBehaviour
                 }
             }
         }
+        //=============================================
+        //Terrain Generation
 
         // beautiful mistake;
-        void MazeAlgorithm(int[,] map)
+        int[,] MazeAlgorithm()
         {
+            int[,] map = new int[width+2, height+2];
             // tilemap.tag = "fg_tile";
             for (int x = 0; x < width+2; x++)
             {
@@ -111,6 +114,7 @@ public class TileMapBehaviour : MonoBehaviour
                     }
                 }
             }
+            return map;
         }
         void Swap<T>(ref T a, ref T b)
         {
@@ -162,7 +166,8 @@ public class TileMapBehaviour : MonoBehaviour
                         if (sum < threshold) {newMap[x,y] = 0;}
                     }
                 }
-                Swap(ref map, ref newMap);
+                (map, newMap) = (newMap, map);
+                //Swap(ref map, ref newMap);
             }
             return map;
         }
@@ -193,75 +198,16 @@ public class TileMapBehaviour : MonoBehaviour
                 }
             }
         }
-        // deprecated
-        int[,] MasksToChange(float playerDiag, Vector3 brushPos)
-        {
-            int[,] output = new int[amountOfChunks, 4];
-            for (int i = 0; i < amountOfChunks; i++)
-            {
-                for (int k = 0; k < 4; k++) {
-                    if (System.Math.Abs(masks[i,k].transform.position.y - brushPos.y) < (playerDiag + height/2) / 2 & System.Math.Abs(masks[i,k].transform.position.x - brushPos.x) < (playerDiag + width/2)/2)
-                    {
-                        output[i,k] = 1;
-                    }
-                    else {output[i,k] = 0;}
-                }
-            }
-            return output;
-        }
         // for updating parameters from unity editor
         public void SetGenerationParams(int thrshld, int nmTr)
         {
             threshold = thrshld;
             numIter = nmTr;
         }
-        // deprecated
-        public void DrawShape(PlayerDrillBehaviour playerDrill) {
-            if (deltaPos.magnitude > 0.125f)
-            {
-                deltaPos = new Vector2(0.0f, 0.0f);
-                Sprite playerSprite = playerDrill.GetComponent<SpriteRenderer>().sprite;
-                Rect borders = playerDrill.GetComponent<SpriteRenderer>().sprite.rect;
-                Vector2 localPos;
-                Vector2Int pixelCoords;
-                playerTex = playerDrill.GetComponent<SpriteRenderer>().sprite.texture;
-                float playerDiag = (float) System.Math.Sqrt(borders.width * borders.width + borders.height * borders.height) / 32;
-                masksToChange = MasksToChange(playerDiag, playerDrill.transform.position);
-                int c = 0;
-                foreach(int poop in masksToChange) {
-                    if (poop==1) {c++;}
-                }
-                for (int i = 0; i < amountOfChunks; i++)
-                {
-                    for (int k = 0; k < 4; k++)
-                    {
-                        if (masksToChange[i,k] == 1)
-                        {
-                            playerColors = playerTex.GetPixels();
-                            colors = masks[i,k].sprite.texture.GetPixels();
-                            for (int y = 0; y < borders.height; y++)
-                            {
-                                for (int x = 0; x < borders.width; x++)
-                                {
-                                    int index = (int) ((borders.y + y) * playerTex.width + borders.x + x);
-                                    if (playerColors[index].a != 0)
-                                    {
-                                        localPos = masks[i,k].transform.InverseTransformPoint(playerDrill.transform.TransformPoint(new Vector2((x + 0.5f - borders.width / 2) / 32.0f, (y + 0.5f - borders.height*0.7f) / 32.0f)));
-                                        pixelCoords = new Vector2Int((int)System.Math.Round(masks[i,k].sprite.texture.width / 2 - localPos.x * 32), (int)System.Math.Round(masks[i,k].sprite.texture.height / 2 - localPos.y * 32));
-                                        if (pixelCoords.x < masks[i,k].sprite.texture.width & pixelCoords.y < masks[i,k].sprite.texture.height & pixelCoords.x > 0 & pixelCoords.y > 0)
-                                        {
-                                            colors[(masks[i,k].sprite.texture.height - pixelCoords.y) * masks[i,k].sprite.texture.width + (masks[i,k].sprite.texture.width - pixelCoords.x)] = new Color(1, 1, 1, 1);
-                                        }
-                                    }
-                                }
-                            }
-                            masks[i,k].sprite.texture.SetPixels(colors);
-                            masks[i,k].sprite.texture.Apply(false);
-                        }
-                    }
-                }
-            }
-        }
+
+        //=============================================
+        //Leaving Trace behind Drill
+
         // create circle mask
         public void MaskPath(Vector2 pos) {
             if (deltaPos.magnitude > 0.25f)
@@ -280,6 +226,10 @@ public class TileMapBehaviour : MonoBehaviour
                 }
             }
         }
+
+        //=============================================
+        //Tilemaps Managment
+        
         // moves foreground and background tilemaps to a new position newPos and generates new terrain
         public void ReplaceMap(int i, Vector2 newPos) {
             //newPos = Vector3.down * grid.cellSize.y * System.Math.Abs(tilemapsBG[i].transform.position.y - 2 * height);
@@ -319,7 +269,7 @@ public class TileMapBehaviour : MonoBehaviour
                 }
             }
         }
-        // moves all maps according to 
+        // moves all maps according to Vdesc
         public void MoveAllMaps(float deltaTime, Vector2 Vdesc, Vector2 Vdrill) {
             for(int i = 0; i < amountOfChunks; i++)
             {

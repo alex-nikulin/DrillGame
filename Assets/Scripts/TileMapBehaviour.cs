@@ -236,20 +236,6 @@ public class TileMapBehaviour : MonoBehaviour
             tilemapsBG[i].transform.position = newPos;
             tilemapsFG[i].transform.position = newPos;
             UpdateMapFGBG(tilemapsFG[i], tilemapsBG[i]);
-            // UpdateMap(tilemapsFG[i]);
-            // for (int k = 0; k < 4; k++) {
-            //     Vector2 deltaK = new Vector3(-width/4.0f + width/2.0f * (k%2), -height/4.0f + height/2.0f * (k/2), 0.0f);
-            //     masks[i,k].transform.position = newPos - new Vector2(1/64.0f, 1/64.0f) + deltaK;
-            //     colors = textures[i,k].GetPixels();
-            //     for (int x = 0; x < colors.Length; x++)
-            //     {
-            //         colors[x] = defaultColor;
-            //     }
-            //     textures[i,k].SetPixels(colors);
-            //     textures[i,k].Apply(false);
-            //     // sprites[i]  = Sprite.Create(textures[i], new Rect(0, 0, width*32, height*32), new Vector2(0.5f, 0.5f), 32.0f);
-            //     // masks[i].GetComponent<SpriteMask>().sprite = sprites[i];
-            // }
         }
         // chooses when and which maps to move to new position
         public void UpdateMaps() {
@@ -319,7 +305,7 @@ public class TileMapBehaviour : MonoBehaviour
     public Grid grid;
     public Tilemap tmapPrefab;
     public SpriteMask maskPrefab;
-    public PlayerDrillBehaviour playerDrill;
+    public DrillBehaviour playerDrill;
     public GameObject circlePrefab;
 
     public Tile dirtTile;
@@ -345,19 +331,22 @@ public class TileMapBehaviour : MonoBehaviour
     public int CheckCurrentTile(Vector3 pos) {
         return tmapMgr.GetCurrentTile(pos, rockTile);
     }
-
-    void Start() {
+    public float GetMaxSpeed(Vector2 pos)
+    {
+        return 1.0f;
+    }
+    void Awake() {
         tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);
     }
     void Update() {
-        tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), playerDrill.GetVdrill());
+        tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), new Vector2(2,0));
         tmapMgr.UpdateMaps();
         playerDrill.dot.transform.position += new Vector3(velDir.x * Time.deltaTime, 0.0f, 0.0f);
         tmapMgr.SetGenerationParams(threshold, numberOfIterations);
     }
     void LateUpdate() {
-        tmapMgr.MaskPath(playerDrill.transform.position);
-        tmapMgr.DestroyOneMask(cam.orthographicSize);
-        velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
+        //tmapMgr.MaskPath(playerDrill.transform.position);
+        //tmapMgr.DestroyOneMask(cam.orthographicSize);
+        //velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
     }
 }

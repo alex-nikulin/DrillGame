@@ -24365,7 +24365,7 @@ MonoBehaviour:
   grid: {fileID: 1987692957}
   tmapPrefab: {fileID: 2067208403861008079, guid: 2eb0ac6817ae0de418e3244a0bbd7a14, type: 3}
   maskPrefab: {fileID: 8102122469039907660, guid: 35811f9d3afc4ed4abb4657e7c7bac2e, type: 3}
-  playerDrill: {fileID: 2083727584}
+  playerDrill: {fileID: 2083727585}
   circlePrefab: {fileID: 203473700042371450, guid: 0225f999f9ae8684bb96186acdd286d4, type: 3}
   dirtTile: {fileID: 11400000, guid: df6feb42a5fe447479aa8f0f0f99b23d, type: 2}
   rockTile: {fileID: 11400000, guid: db5c0e2dbe652444c8f711ad6505c5c2, type: 2}
@@ -29253,6 +29253,7 @@ GameObject:
   - component: {fileID: 2083727583}
   - component: {fileID: 2083727587}
   - component: {fileID: 2083727584}
+  - component: {fileID: 2083727585}
   m_Layer: 0
   m_Name: PlayerDrill
   m_TagString: Untagged
@@ -29355,12 +29356,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 2083727580}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8a472421c71be524ebf573141834517c, type: 3}
+  m_Script: {fileID: 11500000, guid: bab234270150ad9468e2aefd12bbf9f3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  dot: {fileID: 0}
+  tmapBehav: {fileID: 1520694917}
+--- !u!114 &2083727585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2083727580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64ace3ac6c861e84ea44feab818091b5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  dot: {fileID: 203473700042371450, guid: 0225f999f9ae8684bb96186acdd286d4, type: 3}
   circlePrefab: {fileID: 203473700042371450, guid: 0225f999f9ae8684bb96186acdd286d4, type: 3}
-  speed: 4
+  speed: 2
   tmapBehav: {fileID: 1520694917}
 --- !u!60 &2083727587
 PolygonCollider2D:

@@ -13,7 +13,6 @@ public class CircleDetour : DetourBase
     float _radius;
     bool _clockDir;
     bool _leftwing;
-    float _z;
     float alpha1;
     float alpha2;
     float _currentDistance;
@@ -21,14 +20,19 @@ public class CircleDetour : DetourBase
     public float _Vdesc, _Vside;
     Vector2 _Shift;
     Vector2 _originalEndPos;
+    TileMapBehaviour _worldInfo;
 
     //tmp fields
     float _allegedTime, _allegedTime2;
 
-    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed, bool defTurns = false)
+    // Point[] _pointsToCalcTime;
+    float _lengthStep;
+    int _amountOfSteps;
+
+    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo, bool defTurns = false)
         :base(startPos, startDir, endPos)
     {
-        Debug.Log("Constr " + startPos + " " + endPos);
+        // Debug.Log("Constr " + startPos + " " + endPos);
         // all turns have the same radius
         _radius = radius;
         // since tilemaps move up, path needs to accommodate for movement
@@ -43,7 +47,15 @@ public class CircleDetour : DetourBase
         // not used
         _timer = 0;
         _originalEndPos = _endPos;
-        if (defTurns) {DefineTurns();CorrectEndPos();}
+        _worldInfo = worldInfo;
+        _lengthStep = 0.1f;
+        if (defTurns) 
+        {
+            DefineTurns();
+            _amountOfSteps = (int)Mathf.Ceil(GetLength()/_lengthStep);
+            // _pointsToCalcTime = new Point[_amountOfSteps];
+            CorrectEndPos();
+        }
     }
     public Vector2 Rotate(Vector2 v, float rads) 
     {
@@ -116,31 +128,40 @@ public class CircleDetour : DetourBase
     // to calculate this endPos Newton's method is used
     // Function calculates difference between time for drill to travel along path (with endPos moved down by deltaY) and time for tilemaps to move up by deltaY
     // looking for such deltaY: Function(deltaY) == 0
-    public float Function(float deltaY)
+    public override float Function(float deltaY) //problem here
     {
-        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside);
+        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside, _worldInfo);
         cPathPlusDeltaY.DefineTurns();
-        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetLength() / _Vdrill;
+        Debug.Log("Function: " + deltaY + ", length: " + cPathPlusDeltaY.GetLength() + ", deltaY/Vsecs: " + (deltaY) / _Vdesc);
+        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetTime(20);
     }
     // calculation
     public void CorrectEndPos()
     {
-        float deltaY = 10;
-        float diffStep = 0.0001f;
+        float deltaY = 0;
+        float diffStep = 0.01f;
         float cPathL1, cPathL2;
         for (int i = 0; i < 4; i++) 
         {
             cPathL2 = Function(deltaY-diffStep);
             cPathL1 = Function(deltaY);
+            if((cPathL2 - cPathL1) == 0) {break;}
             deltaY += cPathL1 * diffStep / (cPathL2 - cPathL1);
+            Debug.Log("accuracy: " + Function(deltaY) + ", deltaY: " + deltaY + ", cpath1: " + cPathL1 + ", cpath2: " + cPathL2);
         }
         _endPos = new Vector2(_endPos.x, _endPos.y - deltaY);
+        // Debug.Log("prefinal: " + Function)
         DefineTurns();
-        Debug.Log(Function(deltaY));
-            Debug.Log(_Vdrill);
+        Debug.Log("Final: " + deltaY + ", final endpos: " + _endPos.y);
+        float time = GetTime(20);
+        float time_old = GetLength()/_worldInfo.GetMaxSpeed(Vector2.up); 
+        float differY = Mathf.Max(0.0f, _originalEndPos.y - _endPos.y);
+        _brakeVal = time/(time + differY/_Vdesc);
+        Debug.Log("brakeVal " + _brakeVal + ", DifferY: " + differY + ", Vdesc: " + _Vdesc + ", time: " + time + ", time_old: " + time_old + ", length: " + GetLength());
         _Vdrill = Mathf.Min(_Vdrill, GetLength() * _Vdesc / Mathf.Abs(_originalEndPos.y - _endPos.y));
         
     }
+
     
     // essential function, which returns point, corresponding to arbitrary distance
     public override Vector2 GetPoint(float distance)
@@ -184,7 +205,6 @@ public class CircleDetour : DetourBase
             return _endPos;
         }
     }
-
     public override Quaternion GetRotation(float distance) 
     {
         //float distance = _currentDistance;
@@ -335,16 +355,14 @@ public class CircleDetour : DetourBase
         {
             alpha2 = Mathf.Acos(Mathf.Max(-1, Mathf.Min(Vector2.Dot(-1 * _L, _rad2) / (_L.magnitude * _rad2.magnitude), 1))) - Mathf.Acos( Mathf.Min(2 * _radius / _L.magnitude, 1));
         }
-        if (alpha1 == 0 & alpha2 == 0)
-        {
-            Debug.Log(_startPos);
-            Debug.Log(_startDir);
-            Debug.Log(_endPos);
-            Debug.Log(-_startDir.y / _startDir.magnitude);
-            Debug.Log(Vector2.Dot(-1 * _L, _rad2));
-        }
+            // Debug.Log("Iteration");
+            // Debug.Log(_startPos);
+            // Debug.Log(_startDir);
+            // Debug.Log(_endPos);
+            // Debug.Log(-_startDir.y / _startDir.magnitude);
+            // Debug.Log(Vector2.Dot(-1 * _L, _rad2));
+        
     }
-
     public override float GetLength()
     {
         if (_clockDir != _leftwing)
@@ -356,7 +374,6 @@ public class CircleDetour : DetourBase
             return Mathf.Abs(alpha1 * _radius + 2 * alpha2 * _radius) + 2 * Mathf.Sqrt(Mathf.Max(0, _L.magnitude * _L.magnitude / 4 - _radius * _radius));
         }
     }
-    
     // returns vector tangent (касательный) to both circles 
     Vector2 StraightAway()
     {
@@ -368,5 +385,32 @@ public class CircleDetour : DetourBase
         {
             return _L + 2 * Rotate(_rad2, alpha2 * (_leftwing ? 1 : -1));
         }
+    }
+
+    public float GetTime(int acc) 
+    {
+        // Debug.Log("endPos: " + _endPos);
+        float length = GetLength();
+        float time = 0;
+        float step = 0;
+        float deltaS = 0;
+        Vector2 pos1, pos2;
+        pos1 = GetPoint(0);
+        pos2 = GetPoint(0);
+        for (int i = 1; i < acc; i++)
+        {
+            // Debug.Log("ccheck: " + GetPoint(length*i/(acc-1)));
+        }
+        for (int i = 1; i < acc; i++)
+        {
+            pos2 = GetPoint(length*i/(acc-1.0f));
+            // if(pos2.y != pos2.y) {Debug.Log("################################### Time: " + time); return time;}
+            step = (pos2-pos1).magnitude;
+            deltaS += step;
+            time += step/_worldInfo.GetMaxSpeed(pos1);
+            // Debug.Log("i: " + i/(acc-1.0f) + ", time: " + time + ", deltaS " + deltaS + ", L: " + GetLength() + ", step: " + step + ", pos1: " + pos1 + ", pos2: " + pos2 + " GetPoint: " +  GetPoint(length*i/(acc-1)));
+            pos1 = pos2;
+        }
+        return time;
     }
 }

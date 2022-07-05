@@ -29,10 +29,9 @@ public class PlayerDrillBehaviour : MonoBehaviour
         prevParticle = 3;
         dot = Instantiate(circlePrefab, poi, Quaternion.identity);
         dot.GetComponent<SpriteRenderer>().sortingOrder = 5;
-        cPath = new CircleDetour(transform.position, Vector2.down, new Vector2(0,1), 0.5f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x);
+        // cPath = new CircleDetour(transform.position, Vector2.down, new Vector2(0,1), 0.5f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x);
         deltaPos = new Vector2(0, 0);
         var PSList = GetComponentsInChildren<ParticleSystem>();
-        Debug.Log(PSList.Length);
         particles = new ParticleSystem.Particle[256];
         drilledAreaFrame = new List<GameObject>();
     }

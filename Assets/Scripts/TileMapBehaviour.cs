@@ -333,7 +333,7 @@ public class TileMapBehaviour : MonoBehaviour
     }
     public float GetMaxSpeed(Vector2 pos)
     {
-        return 1.0f;
+        return 2.0f;
     }
     void Awake() {
         tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);

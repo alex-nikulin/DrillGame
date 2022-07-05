@@ -25,6 +25,15 @@ public class DrillBehaviour : MonoBehaviour
             _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
         }
     }
+    public void DrawF() 
+    {
+        for (int i = 0; i < 30; i++)
+        {
+            Destroy(_dots[i]);
+            _dots[i] = Instantiate(circlePrefab, new Vector2((15-i)/4.0f, _path.Detour.Function((15-i))/1000.0f), Quaternion.identity);
+            _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -38,14 +47,15 @@ public class DrillBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButton(0))
+        if (Input.GetMouseButtonDown(0))
         {
             poi = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             dot.transform.position = poi;
             dir = new Vector2(Mathf.Sin(transform.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(transform.rotation.eulerAngles.z * Mathf.Deg2Rad));
-            _path.Detour = new CircleDetour(transform.position, dir, poi, 2.0f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x, true);
+            _path.Detour = new CircleDetour(transform.position, dir, poi, 2.0f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x, tmapBehav, true);
         }
-        Draw();
+        // Draw();
+        // DrawF();
     }
 
     void FixedUpdate()

@@ -47,14 +47,14 @@ public class DrillBehaviour : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButton(0))
         {
             poi = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             dot.transform.position = poi;
             dir = new Vector2(Mathf.Sin(transform.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(transform.rotation.eulerAngles.z * Mathf.Deg2Rad));
             _path.Detour = new CircleDetour(transform.position, dir, poi, 2.0f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x, tmapBehav, true);
         }
-        // Draw();
+        Draw();
         // DrawF();
     }
 

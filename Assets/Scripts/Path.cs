@@ -22,6 +22,7 @@ public abstract class DetourBase
             return _Vdrill;
         } 
     }
+    public Vector2 Delta { get; set; }
 
     public DetourBase(Vector2 startPos, Vector2 startDir, Vector2 endPos)
     {
@@ -92,7 +93,7 @@ public class Path
     void InitPoints(Vector2 initPos, Quaternion initRot)
     {
         Debug.Log("Init");
-        float initMaxSpeed = _worldInfo.GetMaxSpeed(initPos);
+        float initMaxSpeed = (_onDetour) ? Detour.Vdrill : _worldInfo.descendingSpeed;
         float initdS = initMaxSpeed * _timeStep;
         _points[_currPoint] = new Point(initPos, initRot, initMaxSpeed, initdS);
         _distanceAhead = initdS;
@@ -110,47 +111,50 @@ public class Path
         {
             _points[i].position += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
         }
+        Detour.Delta += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
         Point pointToReturn = _points[_currPoint];
         _points[_currPoint] = NextPoint();
         _distanceAhead -= pointToReturn.deltaS;
         _currPoint = (_currPoint + 1) % _lookAhead;
-        // Debug.Log(_distanceAhead + " " + _currDetourDistance + " " + _detour.GetLength());
+        // Debug.Log("ahead: " + _distanceAhead + ", dtourDist:  " + _currDetourDistance + ", Length: " + _detour.GetLength());
         if (_onDetour)
         {
             if(_currDetourDistance > _detour.GetLength())
             {
                 _onDetour = false;
                 _currDetourDistance = 0;
-                Debug.Log("back to idle(");
+                // Debug.Log("back to idle(");
             }
         }
         return pointToReturn;
     }
 
-    Point NextPoint(int aheadOf = -1, bool changeCurrDetourDist = true)
+    Point NextPoint(int aheadOf = -1, bool changeCurrDetourDist = true) // problem here
     {
         if (aheadOf == -1) { aheadOf = (_lookAhead + _currPoint - 1) % _lookAhead; }
         if (_onDetour)
-        {   
+        {
+            if (changeCurrDetourDist)
+            {
+                _currDetourDistance += _points[_currPoint].deltaS; 
+            }
             if(_currDetourDistance + _distanceAhead < Detour.GetLength())
             {
                 return NextDetourPoint(changeCurrDetourDist);
             }
+            // Debug.Log("on detour, but idle point returned");
+            return NextIdlePoint(aheadOf);
         }
         return NextIdlePoint(aheadOf);
     }
 
     Point NextDetourPoint(bool changeCurrDetourDist)
     {
-        Vector2    nextPos = Detour.GetPoint   (_currDetourDistance + _distanceAhead);
+        Vector2    nextPos = Detour.GetPoint   (_currDetourDistance + _distanceAhead) + Detour.Delta;
         Quaternion nextRot = Detour.GetRotation(_currDetourDistance + _distanceAhead);
-        float nextSpeed = Detour.Vdrill * _worldInfo.GetMaxSpeed(nextPos);// * _detour._brakeVal;
+        float nextSpeed = Detour.Vdrill; // * _detour._brakeVal;
         float nextdS = nextSpeed * _timeStep;
         _distanceAhead += nextdS;
-        if (changeCurrDetourDist)
-        {
-            _currDetourDistance += _points[_currPoint].deltaS; 
-        }
         return new Point(nextPos, nextRot, nextSpeed, nextdS);
     }
 
@@ -158,7 +162,7 @@ public class Path
     {
         Vector2    nextPos = _points[aheadOf].position + Vector2.down * _points[aheadOf].speed * _timeStep;
         Quaternion nextRot = _points[aheadOf].rotation;
-        float nextSpeed = _worldInfo.GetMaxSpeed(nextPos);
+        float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);
         float nextdS = nextSpeed * _timeStep;
         _distanceAhead += nextdS;
         return new Point(nextPos, nextRot, nextSpeed, nextdS);

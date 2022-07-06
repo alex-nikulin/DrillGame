@@ -333,7 +333,7 @@ public class TileMapBehaviour : MonoBehaviour
     }
     public float GetMaxSpeed(Vector2 pos)
     {
-        return 2.0f;
+        return 1.0f;
     }
     void Awake() {
         tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);
@@ -345,8 +345,8 @@ public class TileMapBehaviour : MonoBehaviour
         tmapMgr.SetGenerationParams(threshold, numberOfIterations);
     }
     void LateUpdate() {
-        //tmapMgr.MaskPath(playerDrill.transform.position);
-        //tmapMgr.DestroyOneMask(cam.orthographicSize);
-        //velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
+        tmapMgr.MaskPath(playerDrill.transform.position);
+        tmapMgr.DestroyOneMask(cam.orthographicSize);
+        // velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
     }
 }

@@ -62,6 +62,7 @@ public class Path
     int _currPoint;
     TileMapBehaviour _worldInfo;
     float _timeStep;
+    public bool markedForInit;
     
     public DetourBase Detour
     {
@@ -71,8 +72,8 @@ public class Path
             _detour = value;
             _onDetour = true; 
             _currDetourDistance = 0; 
-            InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
-            Debug.Log("going onDetour!");
+            markedForInit = true;
+            // InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
         }
     }
 
@@ -86,46 +87,56 @@ public class Path
         _worldInfo = worldInfo;
         _timeStep = timeStep;
         _onDetour = false;
+        Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
         InitPoints(initPos, initRot);
     }
 
 
     void InitPoints(Vector2 initPos, Quaternion initRot)
     {
-        Debug.Log("Init");
         float initMaxSpeed = (_onDetour) ? Detour.Vdrill : _worldInfo.descendingSpeed;
         float initdS = initMaxSpeed * _timeStep;
         _points[_currPoint] = new Point(initPos, initRot, initMaxSpeed, initdS);
         _distanceAhead = initdS;
         for (int i = 0; i < _lookAhead-1; i++)
         {
-            int current = (_currPoint + i    ) % _lookAhead;
+            int aheadOf = (_currPoint + i    ) % _lookAhead;
             int next    = (_currPoint + i + 1) % _lookAhead;
-            _points[next] = NextPoint(current, false);
+            _points[next] = NextPoint(aheadOf, false);
+            _distanceAhead += _points[next].deltaS; 
         }
+        Debug.Log("Init: InitPos: " + initPos + ", initdS: " + initdS + ", _distAhead: " + _distanceAhead + ", _currDetourDist: " + _currDetourDistance + ", init speed: " + initMaxSpeed);
     }
 
     public Point Move()
     {
+        int next = (_currPoint + 1) % _lookAhead;
         for (int i = 0; i < _lookAhead; i++)
         {
             _points[i].position += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
         }
         Detour.Delta += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
-        Point pointToReturn = _points[_currPoint];
-        _points[_currPoint] = NextPoint();
+
+        if (markedForInit)
+        {
+            InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
+            markedForInit = false;
+        }
+        Point pointToReturn = _points[next];
         _distanceAhead -= pointToReturn.deltaS;
-        _currPoint = (_currPoint + 1) % _lookAhead;
-        // Debug.Log("ahead: " + _distanceAhead + ", dtourDist:  " + _currDetourDistance + ", Length: " + _detour.GetLength());
+        _points[_currPoint] = NextPoint();
+        _distanceAhead += _points[_currPoint].deltaS;
         if (_onDetour)
         {
             if(_currDetourDistance > _detour.GetLength())
             {
                 _onDetour = false;
                 _currDetourDistance = 0;
-                // Debug.Log("back to idle(");
             }
         }
+        _currPoint = next;
+
+        Debug.Log("Moving to: " + pointToReturn.position + ", at speed: " + pointToReturn.speed + ", covering distance: " + pointToReturn.deltaS + ", currentPoint: " + _currPoint + ", detourDelta: " + Detour.Delta);
         return pointToReturn;
     }
 
@@ -142,8 +153,6 @@ public class Path
             {
                 return NextDetourPoint(changeCurrDetourDist);
             }
-            // Debug.Log("on detour, but idle point returned");
-            return NextIdlePoint(aheadOf);
         }
         return NextIdlePoint(aheadOf);
     }
@@ -154,17 +163,16 @@ public class Path
         Quaternion nextRot = Detour.GetRotation(_currDetourDistance + _distanceAhead);
         float nextSpeed = Detour.Vdrill; // * _detour._brakeVal;
         float nextdS = nextSpeed * _timeStep;
-        _distanceAhead += nextdS;
         return new Point(nextPos, nextRot, nextSpeed, nextdS);
     }
 
     Point NextIdlePoint(int aheadOf)
     {
+        Debug.Log("in idle");
         Vector2    nextPos = _points[aheadOf].position + Vector2.down * _points[aheadOf].speed * _timeStep;
         Quaternion nextRot = _points[aheadOf].rotation;
         float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);
         float nextdS = nextSpeed * _timeStep;
-        _distanceAhead += nextdS;
-        return new Point(nextPos, nextRot, nextSpeed, nextdS);
+         return new Point(nextPos, nextRot, nextSpeed, nextdS);
     }
 }

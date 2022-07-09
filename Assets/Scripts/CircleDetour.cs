@@ -4,58 +4,23 @@ using UnityEngine;
 
 public class CircleDetour : DetourBase
 {
-    Vector2 _center1;
-    Vector2 _rad1;
-    Vector2 _center2;
-    Vector2 _rad2;
+    Vector2 _center1, _center2;
+    Vector2 _startDir;
+    Vector2 _rad1, _rad2;
     Vector2 _L;
-    Vector2 _descendVelocity;
-    float _radius;
-    bool _clockDir;
-    bool _leftwing;
-    float alpha1;
-    float alpha2;
-    float _currentDistance;
-    float _timer;
-    public float _Vdesc, _Vside;
-    Vector2 _Shift;
-    Vector2 _originalEndPos;
+    float _radius, alpha1, alpha2;
+    bool _clockDir, _leftwing;
+    public float _Vside;
     TileMapBehaviour _worldInfo;
 
-    //tmp fields
-    float _allegedTime, _allegedTime2;
-
-    // Point[] _pointsToCalcTime;
-    float _lengthStep;
-    int _amountOfSteps;
-
-    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo, bool defTurns = false)
-        :base(startPos, startDir, endPos)
+    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo)
+        :base(startPos, endPos, descendSpeed, speed)
     {
-        // all turns have the same radius
         _radius = radius;
-        // since tilemaps move up, path needs to accommodate for movement
-        _Shift = new Vector2(0.0f, 0.0f);
-        // _Vdrill - maximum magnitude of speed along the path, _Vdesc - speed of descending (tilemaps moving up) is always constant
-        // _Vside - current speed of moving side ways, updated every frame
-        _Vdrill = speed;
+        _startDir = startDir;
         Delta = new Vector2(0.0f, 0.0f);
-        _Vdesc  = descendSpeed;
         _Vside = sideSpeed;
-        // distance travelled along the path
-        _currentDistance = 0;
-        // not used
-        _timer = 0;
-        _originalEndPos = _endPos;
         _worldInfo = worldInfo;
-        _lengthStep = 0.1f;
-        if (defTurns) 
-        {
-            // DefineTurns();
-            _amountOfSteps = (int)Mathf.Ceil(GetLength()/_lengthStep);
-            // _pointsToCalcTime = new Point[_amountOfSteps];
-            CorrectEndPos();
-        }
     }
     public Vector2 Rotate(Vector2 v, float rads) 
     {
@@ -68,55 +33,15 @@ public class CircleDetour : DetourBase
         v.y = (sin * tx) + (cos * ty);
         return v;
     }
-    public float GetVRatio() 
-    {
-        if (_hasArrived) {return 1;}
-        return _Vdrill / _Vdesc;
-    }
-    public float GetVdrill() 
-    {
-        if (_hasArrived) {return _Vdesc;}
-        return _Vdrill;
-    }
-    public float GetRadius() 
-    {
-        return _radius;
-    }
     // update vertical component of endPos
     public void SetEndPos(float deltaY) 
     {
         _endPos += new Vector2(0.0f, deltaY);
-        DefineTurns();
+        DefinePath();
     }
     public void SetSideSpeed(float sideSpeed) 
     {
         _Vside = sideSpeed;
-    }
-
-    // changes currentDistance and returns new point according to currentDistance
-    public Vector2 Move(float deltaTime)
-    {
-        _Shift += new Vector2(_Vside, _Vdesc) * deltaTime;
-        float l = _Vdrill;
-        _timer += deltaTime;
-        if (GetLength() <= 0.05) 
-        {
-            if(Mathf.Abs(_originalEndPos.y - _endPos.y) / _Vdesc > _timer) 
-            {
-                _hasArrived = true;
-            }
-            return  _endPos;
-        }
-        else if (_currentDistance + l * deltaTime < GetLength())
-        {
-            _currentDistance += l * deltaTime;
-            return GetPoint(_currentDistance) + _Shift;
-        }
-        else
-        {
-            _hasArrived = true;
-            return _endPos + _Shift;
-        }
     }
 
     public bool Arrived()
@@ -129,52 +54,11 @@ public class CircleDetour : DetourBase
     // Function calculates difference between time for drill to travel along path (with endPos moved down by deltaY) and time for tilemaps to move up by deltaY
     // looking for such deltaY: Function(deltaY) == 0
     public override float Function(float deltaY)
-
     {
         CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside, _worldInfo);
-        cPathPlusDeltaY.DefineTurns();
-        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetLength() / _Vdrill;//cPathPlusDeltaY.GetTime(20);
+        cPathPlusDeltaY.DefinePath();
+        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetTime(20);
     }
-
-    public void CorrectEndPos()
-    {
-        float deltaY = 0;
-        float diffStep = 0.01f;
-        float cPathL1, cPathL2;
-        for (int i = 0; i < 4; i++) 
-        {
-            cPathL2 = Function(deltaY-diffStep);
-            cPathL1 = Function(deltaY);
-            if((cPathL2 - cPathL1) == 0) {break;}
-            deltaY += cPathL1 * diffStep / (cPathL2 - cPathL1);
-        }
-        _endPos = new Vector2(_endPos.x, _endPos.y - deltaY);
-        DefineTurns();
-        float time = GetTime(20);
-        float time_old = GetLength()/_Vdrill; 
-        float differY = Mathf.Max(0.0f, _originalEndPos.y - _endPos.y);
-        _brakeVal = time/(time + differY/_Vdesc);
-        _Vdrill = Mathf.Min(_Vdrill, GetLength() * _Vdesc / Mathf.Abs(_originalEndPos.y - _endPos.y));
-        
-    }
-
-    public void CorrectEndPos2()
-    {
-        float leftY = -20;
-        float rightY = 100;
-        float centralY = 0;
-        for (int i = 0; i < 10; i++) 
-        {
-            centralY = (leftY + rightY)/2;
-            float fl = Function(leftY);
-            float fr = Function(rightY);
-            float fc = Function(centralY);
-            if (fc*fl>0) {leftY = centralY;}
-            else {rightY = centralY;}
-        }
-        _endPos = new Vector2(_endPos.x, _endPos.y - centralY);
-    }
-
     // essential function, which returns point, corresponding to arbitrary distance
     public override Vector2 GetPoint(float distance)
     {
@@ -219,7 +103,6 @@ public class CircleDetour : DetourBase
     }
     public override Quaternion GetRotation(float distance) 
     {
-        //float distance = _currentDistance;
         if (_clockDir != _leftwing)
         {
             if (distance <= (alpha1 - alpha2) * _radius)
@@ -262,7 +145,7 @@ public class CircleDetour : DetourBase
         }
     }
     // defines centers of circles and angles across these circles, the drill will move
-    public void DefineTurns()
+    public override void DefinePath()
     {
         Vector2 radClock  = -_radius * Rotate(_startDir,  Mathf.PI / 2);
         Vector2 radCClock = -_radius * Rotate(_startDir, -Mathf.PI / 2);
@@ -389,25 +272,5 @@ public class CircleDetour : DetourBase
         {
             return _L + 2 * Rotate(_rad2, alpha2 * (_leftwing ? 1 : -1));
         }
-    }
-
-    public float GetTime(int acc) 
-    {
-        float length = GetLength();
-        float time = 0;
-        float step = 0;
-        float deltaS = 0;
-        Vector2 pos1, pos2;
-        pos1 = GetPoint(0);
-        pos2 = GetPoint(0);
-        for (int i = 1; i < acc; i++)
-        {
-            pos2 = GetPoint(length*i/(acc-1.0f));
-            step = (pos2-pos1).magnitude;
-            deltaS += step;
-            time += step/(_Vdrill);
-            pos1 = pos2;
-        }
-        return time;
     }
 }

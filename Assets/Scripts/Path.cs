@@ -2,37 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public abstract class DetourBase
-{
-    protected Vector2 _startPos;
-    protected Vector2 _startDir;
-    protected Vector2 _endPos;
-    protected bool _hasArrived;
-    protected float _Vdrill;
-    protected float _baseSpeed;
-    public float _brakeVal;
-    public abstract Vector2 GetPoint(float distance);
-    public abstract Quaternion GetRotation(float distance);
-    public abstract float GetLength();
-    public abstract float Function(float deltaY); //remove
-    public float Vdrill 
-    { 
-        get
-        {
-            return _Vdrill;
-        } 
-    }
-    public Vector2 Delta { get; set; }
-
-    public DetourBase(Vector2 startPos, Vector2 startDir, Vector2 endPos)
-    {
-        _startPos = startPos; 
-        _startDir = startDir;
-        _startDir.Normalize();
-        _endPos = endPos;
-    }
-}
-
 public struct Point
 {
     public Vector2 position;
@@ -87,7 +56,8 @@ public class Path
         _worldInfo = worldInfo;
         _timeStep = timeStep;
         _onDetour = false;
-        Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
+        // Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
+        Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f);
         InitPoints(initPos, initRot);
     }
 
@@ -115,8 +85,15 @@ public class Path
         {
             _points[i].position += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
         }
-        Detour.Delta += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
-
+        if (_onDetour)
+        {
+            Detour.Delta += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
+            if(_currDetourDistance > _detour.GetLength())
+            {
+                _onDetour = false;
+                _currDetourDistance = 0;
+            }
+        }
         if (markedForInit)
         {
             InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
@@ -126,21 +103,13 @@ public class Path
         _distanceAhead -= pointToReturn.deltaS;
         _points[_currPoint] = NextPoint();
         _distanceAhead += _points[_currPoint].deltaS;
-        if (_onDetour)
-        {
-            if(_currDetourDistance > _detour.GetLength())
-            {
-                _onDetour = false;
-                _currDetourDistance = 0;
-            }
-        }
         _currPoint = next;
 
-        Debug.Log("Moving to: " + pointToReturn.position + ", at speed: " + pointToReturn.speed + ", covering distance: " + pointToReturn.deltaS + ", currentPoint: " + _currPoint + ", detourDelta: " + Detour.Delta);
+        Debug.Log("Moving to: " + pointToReturn.position + ", at speed: " + pointToReturn.speed + ", covering distance: " + pointToReturn.deltaS + ", currentPoint: " + _currPoint + ", detourDelta: " + Detour.Delta + ", DetourDist: " + _currDetourDistance + ", length: " + Detour.GetLength());
         return pointToReturn;
     }
 
-    Point NextPoint(int aheadOf = -1, bool changeCurrDetourDist = true) // problem here
+    Point NextPoint(int aheadOf = -1, bool changeCurrDetourDist = true)
     {
         if (aheadOf == -1) { aheadOf = (_lookAhead + _currPoint - 1) % _lookAhead; }
         if (_onDetour)
@@ -170,7 +139,7 @@ public class Path
     {
         Debug.Log("in idle");
         Vector2    nextPos = _points[aheadOf].position + Vector2.down * _points[aheadOf].speed * _timeStep;
-        Quaternion nextRot = _points[aheadOf].rotation;
+        Quaternion nextRot = Quaternion.identity;
         float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);
         float nextdS = nextSpeed * _timeStep;
          return new Point(nextPos, nextRot, nextSpeed, nextdS);

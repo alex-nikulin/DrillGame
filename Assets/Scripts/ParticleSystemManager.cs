@@ -6,6 +6,7 @@ public class ParticleSystemManager : MonoBehaviour
 {
     ParticleSystem.Particle[] particles;
     public TileMapBehaviour tmapBehav;
+    public DrillBehaviour drillInfo;
     int prevParticle;
 
     public void UpdateParticlesVelocity(ParticleSystem particleSystem) 
@@ -13,9 +14,10 @@ public class ParticleSystemManager : MonoBehaviour
         var emiss = particleSystem.emission;
         string tag = particleSystem.tag;
         int rate = (tag == "dyn_system") ? 30 : 10;
-        emiss.rateOverTime = rate; //cPath.GetVRatio();
+        emiss.rateOverTime = rate * drillInfo.Path.GetVRatio();
         int particlesNumAlive = particleSystem.GetParticles(particles);
-        for (int i = 0; i < particlesNumAlive; i++) {
+        for (int i = 0; i < particlesNumAlive; i++) 
+        {
             particles[i].velocity = new Vector2(tmapBehav.velDir.x, tmapBehav.velDir.y * tmapBehav.descendingSpeed);
         }
         particleSystem.SetParticles(particles, particlesNumAlive);
@@ -33,8 +35,10 @@ public class ParticleSystemManager : MonoBehaviour
     {
         ParticleSystem[] pSystems = GetComponentsInChildren<ParticleSystem>();
         Vector3 checkUnder = transform.TransformPoint(new Vector3(0.0f, -0.5f, 0.0f));
-        if (tmapBehav.CheckCurrentTile(checkUnder) != prevParticle) {
-            if (tmapBehav.CheckCurrentTile(checkUnder) == 1) {
+        if (tmapBehav.CheckCurrentTile(checkUnder) != prevParticle) 
+        {
+            if (tmapBehav.CheckCurrentTile(checkUnder) == 1) 
+            {
                 pSystems[0].Stop();
                 pSystems[1].Stop();
                 pSystems[2].Stop();
@@ -42,7 +46,8 @@ public class ParticleSystemManager : MonoBehaviour
                 pSystems[4].Play();
                 pSystems[5].Play();
             }
-            else {
+            else 
+            {
                 pSystems[0].Play();
                 pSystems[1].Play();
                 pSystems[2].Play();
@@ -59,6 +64,7 @@ public class ParticleSystemManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        prevParticle = 1;
         particles = new ParticleSystem.Particle[256];
         //ManageParticleSystems();
     }

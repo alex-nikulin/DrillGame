@@ -20,6 +20,13 @@ public abstract class DetourBase
             return _Vdrill;
         } 
     }
+    public float Vdesc 
+    { 
+        get
+        {
+            return _Vdesc;
+        } 
+    }
     public Vector2 Delta { get; set; }
     public DetourBase(Vector2 startPos, Vector2 endPos, float Vdesc, float Vdrill)
     {

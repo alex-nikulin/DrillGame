@@ -14621,7 +14621,7 @@ MonoBehaviour:
   m_RefResolutionX: 480
   m_RefResolutionY: 270
   m_UpscaleRT: 0
-  m_PixelSnapping: 1
+  m_PixelSnapping: 0
   m_CropFrameX: 0
   m_CropFrameY: 0
   m_StretchFill: 0
@@ -29252,8 +29252,8 @@ GameObject:
   - component: {fileID: 2083727581}
   - component: {fileID: 2083727583}
   - component: {fileID: 2083727587}
-  - component: {fileID: 2083727584}
   - component: {fileID: 2083727585}
+  - component: {fileID: 2083727584}
   m_Layer: 0
   m_Name: PlayerDrill
   m_TagString: Untagged
@@ -29360,6 +29360,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tmapBehav: {fileID: 1520694917}
+  drillInfo: {fileID: 2083727585}
 --- !u!114 &2083727585
 MonoBehaviour:
   m_ObjectHideFlags: 0

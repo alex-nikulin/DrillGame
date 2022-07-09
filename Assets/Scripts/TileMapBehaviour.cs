@@ -29,7 +29,7 @@ public class TileMapBehaviour : MonoBehaviour
         Tile rockTile, rockBGTile;
         Color defaultColor;
 
-        List<SpriteMask> smallMasks;
+        public List<SpriteMask> smallMasks;
 
         int width, height;
         int threshold, numIter;
@@ -210,7 +210,7 @@ public class TileMapBehaviour : MonoBehaviour
 
         // create circle mask
         public void MaskPath(Vector2 pos) {
-            if (deltaPos.magnitude > 0.25f)
+            if (deltaPos.magnitude > 0.20f)
             {
                 deltaPos = new Vector2(0.0f, 0.0f);
                 smallMasks.Add(Instantiate(maskPrefab, pos, Quaternion.identity));
@@ -223,6 +223,7 @@ public class TileMapBehaviour : MonoBehaviour
                 if (smallMasks[i] != null & smallMasks[i].transform.position.y > upperBorder) {
                     Destroy(smallMasks[i].gameObject);
                     smallMasks.RemoveAt(i);
+                    break;
                 }
             }
         }
@@ -261,15 +262,11 @@ public class TileMapBehaviour : MonoBehaviour
             {
                 tilemapsBG[i].transform.position += (Vector3) Vdesc * deltaTime;
                 tilemapsFG[i].transform.position += (Vector3) Vdesc * deltaTime;
-                // for (int k = 0; k < 4; k++) {
-                //     masks[i,k].transform.position += (Vector3) Vdesc * deltaTime;
-                // }
             }
             foreach (SpriteMask mask in smallMasks) 
             {
                 mask.transform.position += (Vector3) Vdesc * deltaTime;
             }
-
             deltaPos += (Vector3) Vdrill * deltaTime;
         }
         // change x component of velDir, which defines movement of tiles
@@ -339,14 +336,14 @@ public class TileMapBehaviour : MonoBehaviour
         tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);
     }
     void Update() {
-        tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), new Vector2(2,0));
         tmapMgr.UpdateMaps();
         playerDrill.dot.transform.position += new Vector3(velDir.x * Time.deltaTime, 0.0f, 0.0f);
         tmapMgr.SetGenerationParams(threshold, numberOfIterations);
+        tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), new Vector2(2,0));
     }
     void LateUpdate() {
         tmapMgr.MaskPath(playerDrill.transform.position);
-        tmapMgr.DestroyOneMask(cam.orthographicSize);
+        tmapMgr.DestroyOneMask(cam.orthographicSize+0.5f);
         // velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
     }
 }

@@ -20,7 +20,7 @@ public struct Point
     }
 }
 
-public class Path
+public class PathT
 {
     DetourBase _detour;
     bool _onDetour;
@@ -48,7 +48,7 @@ public class Path
 
     // void Brake(int strength);
 
-    public Path(Vector2 initPos, Quaternion initRot, int lookAhead, TileMapBehaviour worldInfo, float timeStep)
+    public PathT(Vector2 initPos, Quaternion initRot, int lookAhead, TileMapBehaviour worldInfo, float timeStep)
     {
         _lookAhead = lookAhead;
         _currPoint = 0;
@@ -60,7 +60,6 @@ public class Path
         Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f);
         InitPoints(initPos, initRot);
     }
-
 
     void InitPoints(Vector2 initPos, Quaternion initRot)
     {
@@ -143,5 +142,9 @@ public class Path
         float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);
         float nextdS = nextSpeed * _timeStep;
          return new Point(nextPos, nextRot, nextSpeed, nextdS);
+    }
+    public float GetVRatio()
+    {
+        return _points[_currPoint].speed/_worldInfo.descendingSpeed;
     }
 }

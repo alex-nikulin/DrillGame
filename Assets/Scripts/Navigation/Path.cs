@@ -1,3 +1,4 @@
+
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -42,7 +43,6 @@ public class PathT
             _onDetour = true; 
             _currDetourDistance = 0; 
             markedForInit = true;
-            // InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
         }
     }
 
@@ -59,6 +59,21 @@ public class PathT
         // Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
         Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f);
         InitPoints(initPos, initRot);
+    }
+
+    public void MakeADetour(Vector2 target)
+    {
+        Point currPoint = _points[_currPoint];
+        Vector2 dir = new Vector2(Mathf.Sin(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad));
+        Vector2 pos = currPoint.position;
+        float speed = 4.0f;
+        float radius = 2.0f;
+        // Detour = new StraightDetour(pos, target, _worldInfo.descendingSpeed, speed);
+        Detour = new CircleDetour(pos, dir, target, radius, speed, _worldInfo.descendingSpeed, _worldInfo.velDir.x, _worldInfo);
+        Detour.CorrectEndPos();
+        _onDetour = true;
+        _currDetourDistance = 0;
+        markedForInit = true;
     }
 
     void InitPoints(Vector2 initPos, Quaternion initRot)

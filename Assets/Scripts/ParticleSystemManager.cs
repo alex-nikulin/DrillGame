@@ -73,6 +73,9 @@ public class ParticleSystemManager : MonoBehaviour
     void Update()
     {
         ManageParticleSystems();
+    }
+    void FixedUpdate()
+    {
         UpdateAllParticleSystems();
     }
 }

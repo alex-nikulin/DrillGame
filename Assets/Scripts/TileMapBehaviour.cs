@@ -204,7 +204,17 @@ public class TileMapBehaviour : MonoBehaviour
             threshold = thrshld;
             numIter = nmTr;
         }
-
+        public void SetMapVel(Vector2 vel)
+        {
+            for(int i = 0; i < 2; i++)
+            {
+                for(int j = -1; j < 2; j++) 
+                {
+                    tilemapsBG[i*3+j+1].GetComponent<Rigidbody2D>().velocity = vel;
+                    tilemapsFG[i*3+j+1].GetComponent<Rigidbody2D>().velocity = vel;
+                }
+            }
+        }
         //=============================================
         //Leaving Trace behind Drill
 
@@ -235,7 +245,7 @@ public class TileMapBehaviour : MonoBehaviour
         public void ReplaceMap(int i, Vector2 newPos) {
             //newPos = Vector3.down * grid.cellSize.y * System.Math.Abs(tilemapsBG[i].transform.position.y - 2 * height);
             tilemapsBG[i].transform.position = newPos;
-            tilemapsFG[i].transform.position = newPos;
+            tilemapsFG[i].transform.position = newPos;  
             UpdateMapFGBG(tilemapsFG[i], tilemapsBG[i]);
         }
         // chooses when and which maps to move to new position
@@ -336,10 +346,13 @@ public class TileMapBehaviour : MonoBehaviour
         tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);
     }
     void Update() {
-        tmapMgr.UpdateMaps();
         playerDrill.dot.transform.position += new Vector3(velDir.x * Time.deltaTime, 0.0f, 0.0f);
         tmapMgr.SetGenerationParams(threshold, numberOfIterations);
         tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), new Vector2(2,0));
+    }
+    void FixedUpdate()
+    {
+        tmapMgr.UpdateMaps();
     }
     void LateUpdate() {
         tmapMgr.MaskPath(playerDrill.transform.position);

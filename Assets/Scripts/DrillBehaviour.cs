@@ -52,10 +52,7 @@ public class DrillBehaviour : MonoBehaviour
         {
             poi = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             dot.transform.position = poi;
-            dir = new Vector2(Mathf.Sin(transform.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(transform.rotation.eulerAngles.z * Mathf.Deg2Rad));
-            Path.Detour = new CircleDetour(transform.position, dir, poi, 2.0f, speed, tmapBehav.descendingSpeed, tmapBehav.velDir.x, tmapBehav);
-            Path.Detour = new StraightDetour(transform.position, poi, tmapBehav.descendingSpeed, 4.0f);
-            Path.Detour.CorrectEndPos();
+            Path.MakeADetour(poi);
         }
         Draw();
         // DrawF();

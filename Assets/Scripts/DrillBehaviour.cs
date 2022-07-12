@@ -26,15 +26,27 @@ public class DrillBehaviour : MonoBehaviour
             _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
         }
     }
-    public void DrawF() 
+    public void DrawSpeedF() 
     {
+        float l = Path.Detour.GetLength();
         for (int i = 0; i < 30; i++)
         {
             Destroy(_dots[i]);
-            _dots[i] = Instantiate(circlePrefab, new Vector2((15-i)/4.0f, Path.Detour.Function((15-i))/1000.0f), Quaternion.identity);
+            _dots[i] = Instantiate(circlePrefab, new Vector2(i/30.0f*4, Path.Detour.GetSpeed(i/30.0f*l)/2.0f), Quaternion.identity);
             _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
         }
     }
+    public void DrawF() 
+    {
+        float l = Path.Detour.GetLength();
+        for (int i = 0; i < 30; i++)
+        {
+            Destroy(_dots[i]);
+            _dots[i] = Instantiate(circlePrefab, new Vector2((15-i)/15.0f*5, Path.Detour.Function(15-i)/4.0f), Quaternion.identity);
+            _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
+        }
+    }
+
 
     // Start is called before the first frame update
     void Start()
@@ -54,8 +66,8 @@ public class DrillBehaviour : MonoBehaviour
             dot.transform.position = poi;
             Path.MakeADetour(poi);
         }
-        Draw();
-        // DrawF();
+        // Draw();
+        DrawSpeedF();
     }
 
     void FixedUpdate()

@@ -42,6 +42,7 @@ TextureImporter:
   streamingMipmaps: 0
   streamingMipmapsPriority: 0
   vTOnly: 0
+  ignoreMasterTextureLimit: 0
   grayScaleToAlpha: 0
   generateCubemap: 6
   cubemapConvolution: 0
@@ -244,6 +245,13 @@ TextureImporter:
     edges: []
     weights: []
     secondaryTextures: []
+    nameFileIdTable:
+      rock_tiles_5: -6170337719814093412
+      rock_tiles_0: -8373391323728436399
+      rock_tiles_3: -4240612016408468850
+      rock_tiles_2: 7669212285095828728
+      rock_tiles_4: 6759976354429277281
+      rock_tiles_1: -6499986850445425416
   spritePackingTag: 
   pSDRemoveMatte: 0
   pSDShowRemoveMatteOption: 0

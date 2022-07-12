@@ -6,8 +6,8 @@ public class StraightDetour : DetourBase
 {
     Vector2 _direction;    
 
-    public StraightDetour(Vector2 startPos, Vector2 endPos, float Vdesc, float Vdrill)
-        :base(startPos, endPos, Vdesc, Vdrill)
+    public StraightDetour(Vector2 startPos, Vector2 endPos, float Vdesc, float Vdrill, float Vcurr, float Vidle, float accel)
+        :base(startPos, endPos, Vdesc, Vdrill, Vcurr, Vidle, accel)
     {}
     public override Vector2 GetPoint(float distance)
     {
@@ -39,8 +39,9 @@ public class StraightDetour : DetourBase
     }
     public override float Function(float deltaY)
     {
-        StraightDetour cPathPlusDeltaY = new StraightDetour(_startPos, new Vector2(_endPos.x, _endPos.y - deltaY), _Vdesc, _Vdrill);
+        StraightDetour cPathPlusDeltaY = new StraightDetour(_startPos, new Vector2(_endPos.x, _endPos.y - deltaY), _Vdesc, _Vdrill, _Vstart, _Vfinal, _accel);
         cPathPlusDeltaY.DefinePath();
+        cPathPlusDeltaY.CalcAccel();
         return deltaY / _Vdesc - cPathPlusDeltaY.GetTime(20);
     }
 }

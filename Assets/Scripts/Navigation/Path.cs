@@ -57,7 +57,7 @@ public class PathT
         _timeStep = timeStep;
         _onDetour = false;
         // Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
-        Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f);
+        Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
         InitPoints(initPos, initRot);
     }
 
@@ -67,9 +67,12 @@ public class PathT
         Vector2 dir = new Vector2(Mathf.Sin(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad));
         Vector2 pos = currPoint.position;
         float speed = 4.0f;
+        float idleSpeed = _worldInfo.descendingSpeed;
+        float currSpeed = currPoint.speed;
+        float accel = 6;
         float radius = 2.0f;
         // Detour = new StraightDetour(pos, target, _worldInfo.descendingSpeed, speed);
-        Detour = new CircleDetour(pos, dir, target, radius, speed, _worldInfo.descendingSpeed, _worldInfo.velDir.x, _worldInfo);
+        Detour = new CircleDetour(pos, dir, target, currSpeed, idleSpeed, accel, radius, speed, _worldInfo.descendingSpeed, _worldInfo.velDir.x, _worldInfo);
         Detour.CorrectEndPos();
         _onDetour = true;
         _currDetourDistance = 0;
@@ -89,7 +92,7 @@ public class PathT
             _points[next] = NextPoint(aheadOf, false);
             _distanceAhead += _points[next].deltaS; 
         }
-        Debug.Log("Init: InitPos: " + initPos + ", initdS: " + initdS + ", _distAhead: " + _distanceAhead + ", _currDetourDist: " + _currDetourDistance + ", init speed: " + initMaxSpeed);
+        // Debug.Log("Init: InitPos: " + initPos + ", initdS: " + initdS + ", _distAhead: " + _distanceAhead + ", _currDetourDist: " + _currDetourDistance + ", init speed: " + initMaxSpeed);
     }
 
     public Point Move()
@@ -119,7 +122,7 @@ public class PathT
         _distanceAhead += _points[_currPoint].deltaS;
         _currPoint = next;
 
-        Debug.Log("Moving to: " + pointToReturn.position + ", at speed: " + pointToReturn.speed + ", covering distance: " + pointToReturn.deltaS + ", currentPoint: " + _currPoint + ", detourDelta: " + Detour.Delta + ", DetourDist: " + _currDetourDistance + ", length: " + Detour.GetLength());
+        // Debug.Log("Moving to: " + pointToReturn.position + ", at speed: " + pointToReturn.speed + ", covering distance: " + pointToReturn.deltaS + ", currentPoint: " + _currPoint + ", detourDelta: " + Detour.Delta + ", DetourDist: " + _currDetourDistance + ", length: " + Detour.GetLength());
         return pointToReturn;
     }
 
@@ -144,14 +147,13 @@ public class PathT
     {
         Vector2    nextPos = Detour.GetPoint   (_currDetourDistance + _distanceAhead) + Detour.Delta;
         Quaternion nextRot = Detour.GetRotation(_currDetourDistance + _distanceAhead);
-        float nextSpeed = Detour.Vdrill; // * _detour._brakeVal;
+        float nextSpeed = Detour.GetSpeed(_currDetourDistance + _distanceAhead); // * _detour._brakeVal;
         float nextdS = nextSpeed * _timeStep;
         return new Point(nextPos, nextRot, nextSpeed, nextdS);
     }
 
     Point NextIdlePoint(int aheadOf)
     {
-        Debug.Log("in idle");
         Vector2    nextPos = _points[aheadOf].position + Vector2.down * _points[aheadOf].speed * _timeStep;
         Quaternion nextRot = Quaternion.identity;
         float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);

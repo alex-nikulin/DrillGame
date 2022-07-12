@@ -13,8 +13,8 @@ public class CircleDetour : DetourBase
     public float _Vside;
     TileMapBehaviour _worldInfo;
 
-    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo)
-        :base(startPos, endPos, descendSpeed, speed)
+    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float Vcurr, float Vidle, float accel, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo)
+        :base(startPos, endPos, descendSpeed, speed, Vcurr, Vidle, accel)
     {
         _radius = radius;
         _startDir = startDir;
@@ -55,9 +55,9 @@ public class CircleDetour : DetourBase
     // looking for such deltaY: Function(deltaY) == 0
     public override float Function(float deltaY)
     {
-        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _radius, _Vdrill, _Vdesc, _Vside, _worldInfo);
+        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _Vstart, _Vfinal, _accel, _radius, _Vdrill, _Vdesc, _Vside, _worldInfo);
         cPathPlusDeltaY.DefinePath();
-        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetTime(20);
+        return (deltaY) / _Vdesc - cPathPlusDeltaY.GetTime(40);
     }
     // essential function, which returns point, corresponding to arbitrary distance
     public override Vector2 GetPoint(float distance)

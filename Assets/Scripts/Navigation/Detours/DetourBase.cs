@@ -9,6 +9,7 @@ public abstract class DetourBase
     protected bool _hasArrived;
     protected float _Sstart, _Sfinal, _Scrit, _accel;
     protected float _Vdrill, _Vdesc, _Vstart, _Vfinal;
+    
     public abstract Vector2 GetPoint(float distance);
     public abstract Quaternion GetRotation(float distance);
     public abstract float GetLength();
@@ -45,7 +46,8 @@ public abstract class DetourBase
         float deltaY = 0;
         float diffStep = 0.01f;
         float cPathL1, cPathL2;
-        for (int i = 0; i < 4; i++) 
+        // float startsolve = Time.realtimeSinceStartup;
+        for (int i = 0; i < 2; i++) 
         {
             cPathL2 = Function(deltaY-diffStep);
             cPathL1 = Function(deltaY);
@@ -53,15 +55,21 @@ public abstract class DetourBase
             deltaY += cPathL1 * diffStep / (cPathL2 - cPathL1);
             Debug.Log(i+" - answer: " + deltaY + ", accuracy: " + Function(deltaY));
         }
+        // float endsolve = Time.realtimeSinceStartup;
         _endPos = new Vector2(_endPos.x, _endPos.y - deltaY);
+        // float startdefpath = Time.realtimeSinceStartup;
         DefinePath();
+        // float enddefpath = Time.realtimeSinceStartup;
         float time = GetTime(20);
+        // float enddeftime = Time.realtimeSinceStartup;
         float time_old = GetLength()/_Vdrill; 
         float differY = Mathf.Max(0.0f, _originalEndPos.y - _endPos.y);
         _Vdrill = Mathf.Min(_Vdrill, GetLength() * _Vdesc / Mathf.Abs(_originalEndPos.y - _endPos.y));
         CalcAccel();
-    // Debug.Log("final answer: " + deltaY + ", accuracy: " + Function(deltaY));
-        
+        // Debug.Log("solve time: " + (endsolve - startsolve));
+        // Debug.Log("defpath time: " + (enddefpath - startdefpath));
+        // Debug.Log("gettime time: " + (enddeftime - enddefpath));
+        // Debug.Log("final answer: " + deltaY + ", accuracy: " + Function(deltaY));        
     }
     public void CalcAccel()
     {

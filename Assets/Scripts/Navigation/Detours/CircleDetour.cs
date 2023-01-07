@@ -10,17 +10,13 @@ public class CircleDetour : DetourBase
     Vector2 _L;
     float _radius, alpha1, alpha2;
     bool _clockDir, _leftwing;
-    public float _Vside;
-    TileMapBehaviour _worldInfo;
 
-    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float Vcurr, float Vidle, float accel, float radius, float speed, float descendSpeed, float sideSpeed, TileMapBehaviour worldInfo)
+    public CircleDetour(Vector2 startPos, Vector2 startDir, Vector2 endPos, float Vcurr, float Vidle, float accel, float radius, float speed, float descendSpeed)
         :base(startPos, endPos, descendSpeed, speed, Vcurr, Vidle, accel)
     {
         _radius = radius;
         _startDir = startDir;
         Delta = new Vector2(0.0f, 0.0f);
-        _Vside = sideSpeed;
-        _worldInfo = worldInfo;
     }
     public Vector2 Rotate(Vector2 v, float rads) 
     {
@@ -39,10 +35,6 @@ public class CircleDetour : DetourBase
         _endPos += new Vector2(0.0f, deltaY);
         DefinePath();
     }
-    public void SetSideSpeed(float sideSpeed) 
-    {
-        _Vside = sideSpeed;
-    }
 
     public bool Arrived()
     {
@@ -55,7 +47,7 @@ public class CircleDetour : DetourBase
     // looking for such deltaY: Function(deltaY) == 0
     public override float Function(float deltaY)
     {
-        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _Vstart, _Vfinal, _accel, _radius, _Vdrill, _Vdesc, _Vside, _worldInfo);
+        CircleDetour cPathPlusDeltaY = new CircleDetour(_startPos, _startDir, new Vector2(_endPos.x, _endPos.y - deltaY), _Vstart, _Vfinal, _accel, _radius, _Vdrill, _Vdesc);
         cPathPlusDeltaY.DefinePath();
         return (deltaY) / _Vdesc - cPathPlusDeltaY.GetTime(40);
     }

@@ -8,12 +8,15 @@ public class DrillBehaviour : MonoBehaviour
     Vector2 dir;
     public GameObject dot;
     public GameObject circlePrefab;
-    public float speed;
-    public TileMapBehaviour tmapBehav;
+    public float camSpeed;
+    public SpriteMask _maskPrefab;
     
     List<GameObject> drilledAreaFrame;
+    List<SpriteMask> _smallMasks;
     GameObject[] _dots;
     GameObject _dot;
+
+    float _deltaPos;
 
     public PathT Path { get; set; } 
 
@@ -46,28 +49,64 @@ public class DrillBehaviour : MonoBehaviour
             _dots[i].GetComponent<SpriteRenderer>().sortingOrder = 5;
         }
     }
+    //=============================================
+    //Leaving Trace behind Drill
 
+    // create circle mask
+    public void MaskPath() {
+        if (_deltaPos > 0.20f)
+        {
+            _deltaPos = 0.0f;
+            Vector2 pos = transform.position;
+            _smallMasks.Add(Instantiate(_maskPrefab, pos, Quaternion.identity));
+        }
+    }
+    // destroy a mask out of screen
+    public void DestroyOneMask(float upperBorder)
+    {
+        for (int i = 0; i < _smallMasks.Count; i++) {
+            if (_smallMasks[i] != null & _smallMasks[i].transform.position.y > upperBorder) {
+                Destroy(_smallMasks[i].gameObject);
+                _smallMasks.RemoveAt(i);
+                break;
+            }
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
     {
+        _smallMasks = new List<SpriteMask>();
+        _deltaPos = 0.0f;
         dot = Instantiate(circlePrefab, poi, Quaternion.identity);
         dot.GetComponent<SpriteRenderer>().sortingOrder = 5;
-        Path = new PathT(transform.position, transform.rotation, 30, tmapBehav, Time.fixedDeltaTime);
+        Path = new PathT(transform.position, transform.rotation, 30, camSpeed, Time.fixedDeltaTime);
         _dots = new GameObject[30];
     }
 
     // Update is called once per frame
     void Update()
     {
+        float fstart = Time.realtimeSinceStartup;
         if (Input.GetMouseButton(0))
         {
             poi = Camera.main.ScreenToWorldPoint(Input.mousePosition);
             dot.transform.position = poi;
+            float start = Time.realtimeSinceStartup;
             Path.MakeADetour(poi);
+            float end = Time.realtimeSinceStartup;
+            Debug.Log("MakeADetour time:" + (end - start));
+            Debug.Log("overall time: " + (end - fstart));
         }
-        // Draw();
-        DrawSpeedF();
+        MaskPath();
+        DestroyOneMask(Camera.main.orthographicSize+0.5f);
+        
+        foreach (SpriteMask mask in _smallMasks) 
+        {
+            mask.transform.position += Vector3.up * camSpeed * Time.deltaTime;
+        }
+        _deltaPos += Path.GetSpeed() * Time.deltaTime;
+
     }
 
     void FixedUpdate()

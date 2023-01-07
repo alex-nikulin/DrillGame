@@ -5,7 +5,7 @@ using UnityEngine;
 public class ParticleSystemManager : MonoBehaviour
 {
     ParticleSystem.Particle[] particles;
-    public TileMapBehaviour tmapBehav;
+    public float _camSpeed;
     public DrillBehaviour drillInfo;
     int prevParticle;
 
@@ -18,7 +18,7 @@ public class ParticleSystemManager : MonoBehaviour
         int particlesNumAlive = particleSystem.GetParticles(particles);
         for (int i = 0; i < particlesNumAlive; i++) 
         {
-            particles[i].velocity = new Vector2(tmapBehav.velDir.x, tmapBehav.velDir.y * tmapBehav.descendingSpeed);
+            particles[i].velocity = new Vector2(0.0f, _camSpeed);
         }
         particleSystem.SetParticles(particles, particlesNumAlive);
 
@@ -35,28 +35,28 @@ public class ParticleSystemManager : MonoBehaviour
     {
         ParticleSystem[] pSystems = GetComponentsInChildren<ParticleSystem>();
         Vector3 checkUnder = transform.TransformPoint(new Vector3(0.0f, -0.5f, 0.0f));
-        if (tmapBehav.CheckCurrentTile(checkUnder) != prevParticle) 
-        {
-            if (tmapBehav.CheckCurrentTile(checkUnder) == 1) 
-            {
-                pSystems[0].Stop();
-                pSystems[1].Stop();
-                pSystems[2].Stop();
-                pSystems[3].Play();
-                pSystems[4].Play();
-                pSystems[5].Play();
-            }
-            else 
-            {
-                pSystems[0].Play();
-                pSystems[1].Play();
-                pSystems[2].Play();
-                pSystems[3].Stop();
-                pSystems[4].Stop();
-                pSystems[5].Stop();
-            }
-            prevParticle = tmapBehav.CheckCurrentTile(checkUnder);
-        }
+        // if (tmapBehav.CheckCurrentTile(checkUnder) != prevParticle) 
+        // {
+        //     if (tmapBehav.CheckCurrentTile(checkUnder) == 1) 
+        //     {
+        //         pSystems[0].Stop();
+        //         pSystems[1].Stop();
+        //         pSystems[2].Stop();
+        //         pSystems[3].Play();
+        //         pSystems[4].Play();
+        //         pSystems[5].Play();
+        //     }
+        //     else 
+        //     {
+        //         pSystems[0].Play();
+        //         pSystems[1].Play();
+        //         pSystems[2].Play();
+        //         pSystems[3].Stop();
+        //         pSystems[4].Stop();
+        //         pSystems[5].Stop();
+        //     }
+        //     prevParticle = tmapBehav.CheckCurrentTile(checkUnder);
+        // }
 
     }
 
@@ -64,6 +64,13 @@ public class ParticleSystemManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        ParticleSystem[] pSystems = GetComponentsInChildren<ParticleSystem>();
+        pSystems[0].Play();
+        pSystems[1].Play();
+        pSystems[2].Play();
+        pSystems[3].Stop();
+        pSystems[4].Stop();
+        pSystems[5].Stop();
         prevParticle = 1;
         particles = new ParticleSystem.Particle[256];
         //ManageParticleSystems();

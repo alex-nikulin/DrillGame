@@ -30,7 +30,7 @@ public class PathT
     public Point[] _points;
     int _lookAhead;
     int _currPoint;
-    TileMapBehaviour _worldInfo;
+    float _camSpeed;
     float _timeStep;
     public bool markedForInit;
     
@@ -48,12 +48,12 @@ public class PathT
 
     // void Brake(int strength);
 
-    public PathT(Vector2 initPos, Quaternion initRot, int lookAhead, TileMapBehaviour worldInfo, float timeStep)
+    public PathT(Vector2 initPos, Quaternion initRot, int lookAhead, float camSpeed, float timeStep)
     {
         _lookAhead = lookAhead;
         _currPoint = 0;
         _points = new Point[lookAhead];
-        _worldInfo = worldInfo;
+        _camSpeed = camSpeed;
         _timeStep = timeStep;
         _onDetour = false;
         // Detour = new CircleDetour(Vector2.up, Vector2.up, Vector2.up, 2.0f, 4.0f, 2.0f, 0.0f, worldInfo);
@@ -67,21 +67,25 @@ public class PathT
         Vector2 dir = new Vector2(Mathf.Sin(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad), -Mathf.Cos(currPoint.rotation.eulerAngles.z * Mathf.Deg2Rad));
         Vector2 pos = currPoint.position;
         float speed = 4.0f;
-        float idleSpeed = _worldInfo.descendingSpeed;
+        float idleSpeed = _camSpeed;
         float currSpeed = currPoint.speed;
         float accel = 6;
         float radius = 2.0f;
-        // Detour = new StraightDetour(pos, target, _worldInfo.descendingSpeed, speed);
-        Detour = new CircleDetour(pos, dir, target, currSpeed, idleSpeed, accel, radius, speed, _worldInfo.descendingSpeed, _worldInfo.velDir.x, _worldInfo);
+        // Detour = new StraightDetour(Vector2.zero, Vector2.zero, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f);
+        Detour = new CircleDetour(pos, dir, target, currSpeed, idleSpeed, accel, radius, speed, _camSpeed);
+        float start = Time.realtimeSinceStartup;
         Detour.CorrectEndPos();
+        float end = Time.realtimeSinceStartup;
+        Debug.Log("correct end pos time: " + (end - start));
         _onDetour = true;
         _currDetourDistance = 0;
         markedForInit = true;
+        InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
     }
 
     void InitPoints(Vector2 initPos, Quaternion initRot)
     {
-        float initMaxSpeed = (_onDetour) ? Detour.Vdrill : _worldInfo.descendingSpeed;
+        float initMaxSpeed = (_onDetour) ? Detour.Vdrill : _camSpeed;
         float initdS = initMaxSpeed * _timeStep;
         _points[_currPoint] = new Point(initPos, initRot, initMaxSpeed, initdS);
         _distanceAhead = initdS;
@@ -100,11 +104,11 @@ public class PathT
         int next = (_currPoint + 1) % _lookAhead;
         for (int i = 0; i < _lookAhead; i++)
         {
-            _points[i].position += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
+            _points[i].position += Vector2.up * _camSpeed * _timeStep;
         }
         if (_onDetour)
         {
-            Detour.Delta += Vector2.up * _worldInfo.descendingSpeed * _timeStep;
+            Detour.Delta += Vector2.up * _camSpeed * _timeStep;
             if(_currDetourDistance > _detour.GetLength())
             {
                 _onDetour = false;
@@ -113,7 +117,6 @@ public class PathT
         }
         if (markedForInit)
         {
-            InitPoints(_points[_currPoint].position, _points[_currPoint].rotation);
             markedForInit = false;
         }
         Point pointToReturn = _points[next];
@@ -156,12 +159,16 @@ public class PathT
     {
         Vector2    nextPos = _points[aheadOf].position + Vector2.down * _points[aheadOf].speed * _timeStep;
         Quaternion nextRot = Quaternion.identity;
-        float nextSpeed = _worldInfo.descendingSpeed; // _worldInfo.GetMaxSpeed(nextPos);
+        float nextSpeed = _camSpeed; // _worldInfo.GetMaxSpeed(nextPos);
         float nextdS = nextSpeed * _timeStep;
          return new Point(nextPos, nextRot, nextSpeed, nextdS);
     }
     public float GetVRatio()
     {
-        return _points[_currPoint].speed/_worldInfo.descendingSpeed;
+        return _points[_currPoint].speed/_camSpeed;
+    }
+    public float GetSpeed()
+    {
+        return _points[_currPoint].speed;
     }
 }

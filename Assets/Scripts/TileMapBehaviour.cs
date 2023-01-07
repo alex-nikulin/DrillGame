@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
 using UnityEditor;
+using UnityEngine.Events;
 
 public class TileMapBehaviour : MonoBehaviour
 {
@@ -23,22 +24,18 @@ public class TileMapBehaviour : MonoBehaviour
         int[,] masksToChange;
         Vector3 deltaPos;
         Tilemap tmapPrefab;
-        SpriteMask maskPrefab;
         Grid grid;
         Tile dirtTile, dirtBGTile;
         Tile rockTile, rockBGTile;
         Color defaultColor;
 
-        public List<SpriteMask> smallMasks;
-
         int width, height;
         int threshold, numIter;
 
-        public TilemapManager(int threshold_, int numIter_, Vector3Int tmapSize, Tile dirt, Tile dirtBG, Tile rock, Tile rockBG, Tilemap prefab, SpriteMask maskfab, Grid parent) {
+        public TilemapManager(int threshold_, int numIter_, Vector3Int tmapSize, Tile dirt, Tile dirtBG, Tile rock, Tile rockBG, Tilemap prefab, Grid parent) {
             width  = tmapSize.x;
             height = tmapSize.y;
             tmapPrefab = prefab;
-            maskPrefab = maskfab;
             dirtTile = dirt;
             dirtBGTile = dirtBG;
             rockTile = rock;
@@ -54,7 +51,6 @@ public class TileMapBehaviour : MonoBehaviour
             textures   = new  Texture2D[amountOfChunks, 4];
             sprites    = new     Sprite[amountOfChunks, 4];
             defaultColor = new Color(0, 0, 0, 0);
-            smallMasks = new List<SpriteMask>();
 
             for(int i = 0; i < 2; i++)
             {
@@ -215,28 +211,6 @@ public class TileMapBehaviour : MonoBehaviour
                 }
             }
         }
-        //=============================================
-        //Leaving Trace behind Drill
-
-        // create circle mask
-        public void MaskPath(Vector2 pos) {
-            if (deltaPos.magnitude > 0.20f)
-            {
-                deltaPos = new Vector2(0.0f, 0.0f);
-                smallMasks.Add(Instantiate(maskPrefab, pos, Quaternion.identity));
-            }
-        }
-        // destroy a mask out of screen
-        public void DestroyOneMask(float upperBorder)
-        {
-            for (int i = 0; i < smallMasks.Count; i++) {
-                if (smallMasks[i] != null & smallMasks[i].transform.position.y > upperBorder) {
-                    Destroy(smallMasks[i].gameObject);
-                    smallMasks.RemoveAt(i);
-                    break;
-                }
-            }
-        }
 
         //=============================================
         //Tilemaps Managment
@@ -273,11 +247,6 @@ public class TileMapBehaviour : MonoBehaviour
                 tilemapsBG[i].transform.position += (Vector3) Vdesc * deltaTime;
                 tilemapsFG[i].transform.position += (Vector3) Vdesc * deltaTime;
             }
-            foreach (SpriteMask mask in smallMasks) 
-            {
-                mask.transform.position += (Vector3) Vdesc * deltaTime;
-            }
-            deltaPos += (Vector3) Vdrill * deltaTime;
         }
         // change x component of velDir, which defines movement of tiles
         public Vector2 ManageSideMotion(Vector3 playerPos, Camera cam, Vector2 velDir, float deltaT, float softBound, float hardBound) {
@@ -309,10 +278,9 @@ public class TileMapBehaviour : MonoBehaviour
         }
     }
 
+    UnityEvent m_ChangePace;
     public Grid grid;
     public Tilemap tmapPrefab;
-    public SpriteMask maskPrefab;
-    public DrillBehaviour playerDrill;
     public GameObject circlePrefab;
 
     public Tile dirtTile;
@@ -343,10 +311,10 @@ public class TileMapBehaviour : MonoBehaviour
         return 1.0f;
     }
     void Awake() {
-        tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, maskPrefab, grid);
+        tmapMgr = new TilemapManager(threshold, numberOfIterations, tmapSize, dirtTile, dirtBGTile, rockTile, rockBGTile, tmapPrefab, grid);
     }
     void Update() {
-        playerDrill.dot.transform.position += new Vector3(velDir.x * Time.deltaTime, 0.0f, 0.0f);
+        // playerDrill.dot.transform.position += new Vector3(velDir.x * Time.deltaTime, 0.0f, 0.0f);
         tmapMgr.SetGenerationParams(threshold, numberOfIterations);
         tmapMgr.MoveAllMaps(Time.deltaTime, new Vector3(velDir.x, velDir.y * descendingSpeed, 0.0f), new Vector2(2,0));
     }
@@ -355,8 +323,8 @@ public class TileMapBehaviour : MonoBehaviour
         tmapMgr.UpdateMaps();
     }
     void LateUpdate() {
-        tmapMgr.MaskPath(playerDrill.transform.position);
-        tmapMgr.DestroyOneMask(cam.orthographicSize+0.5f);
+        // tmapMgr.MaskPath(playerDrill.transform.position);
+        // tmapMgr.DestroyOneMask(cam.orthographicSize+0.5f);
         // velDir = tmapMgr.ManageSideMotion(playerDrill.transform.position, cam, velDir, Time.deltaTime, softBound, hardBound);
     }
 }
